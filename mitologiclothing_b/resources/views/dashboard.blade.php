@@ -139,7 +139,7 @@
             <ul>
                 <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
                 <li><a href="{{ url('stok') }}">Stok</a></li>
-                <li><a href="{{ url('price-list') }}">Price List</a></li>
+                <li><a href="{{ url('pricelist') }}">Price List</a></li>
                 <li><a href="{{ url('pesanan') }}">Pesanan</a></li>
                 <li><a href="{{ url('tagihan') }}">Tagihan</a></li>
                 <li><a href="{{ url('artikel') }}">Artikel</a></li>
