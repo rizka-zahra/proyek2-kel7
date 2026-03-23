@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'views/home/home_page.dart';
 import 'viewmodels/product_viewmodel.dart';
+import 'viewmodels/article_viewmodel.dart';
+import 'views/home/home_page.dart';
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(create: (_) => ProductViewModel(), child: MyApp()),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProductViewModel()),
+        ChangeNotifierProvider(create: (_) => ArticleViewModel()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Mitodologi Clothing',
+        theme: ThemeData(
+          useMaterial3: true,
+          scaffoldBackgroundColor: const Color(0xFFF8F7FB),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF2F4A8A),
+          ),
+        ),
+        home: const HomePage(),
+      ),
     );
   }
 }
