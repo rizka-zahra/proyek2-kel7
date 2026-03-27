@@ -1,0 +1,32 @@
+{
+  "provinces": [
+    {
+      "id": 1,
+      "name": "Jawa Barat",
+      "cities": [
+        {
+          "id": 101,
+          "name": "Kabupaten Garut",
+          "districts": [
+            {
+              "id": 1001,
+              "name": "Tarogong Kidul",
+              "villages": [
+                {
+                  "id": 10001,
+                  "name": "Haurpanggung",
+                  "zip_code": "44151"
+                },
+                {
+                  "id": 10002,
+                  "name": "Jayawaras",
+                  "zip_code": "44151"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

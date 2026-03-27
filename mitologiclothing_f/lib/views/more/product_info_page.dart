@@ -4,6 +4,7 @@ import '../../viewmodels/product_viewmodel.dart';
 import '../../widgets/menu_drawer.dart';
 import '../../widgets/navbar_home.dart';
 import '../home/home_page.dart';
+import '../more/pesanan_page.dart';
 import 'about_page.dart';
 import 'faq_page.dart';
 
@@ -16,6 +17,11 @@ class ProductInfoPage extends StatefulWidget {
 
 class _ProductInfoPageState extends State<ProductInfoPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // Navbar sekarang 3 item:
+  // 0 = Home
+  // 1 = Belanja
+  // 2 = Artikel
   final int _currentIndex = 0;
 
   @override
@@ -28,6 +34,16 @@ class _ProductInfoPageState extends State<ProductInfoPage> {
   }
 
   void _handleBottomNav(int index) {
+    if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const PesananPage(),
+        ),
+      );
+      return;
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -64,7 +80,7 @@ class _ProductInfoPageState extends State<ProductInfoPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const HomePage(initialIndex: 2),
+            builder: (_) => const PesananPage(),
           ),
         );
         break;
@@ -74,7 +90,7 @@ class _ProductInfoPageState extends State<ProductInfoPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const HomePage(initialIndex: 3),
+            builder: (_) => const HomePage(initialIndex: 2),
           ),
         );
         break;
@@ -117,6 +133,13 @@ class _ProductInfoPageState extends State<ProductInfoPage> {
               height: 42,
               width: 42,
               fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.storefront_outlined,
+                  size: 38,
+                  color: Color(0xFF5C6F97),
+                );
+              },
             ),
             const SizedBox(width: 10),
             const Expanded(

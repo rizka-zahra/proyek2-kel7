@@ -12,15 +12,17 @@ class StokTab extends StatefulWidget {
 }
 
 class _StokTabState extends State<StokTab> {
-  final List<ShopItemModel> _allItems = ShopDummyService.getProducts();
+  final List<ShopItemModel> _allItems = ShopDummyService.getStockItems();
   String _query = '';
 
   List<ShopItemModel> get _filteredItems {
     if (_query.isEmpty) return _allItems;
 
-    return _allItems
-        .where((item) => item.name.toLowerCase().contains(_query.toLowerCase()))
-        .toList();
+    return _allItems.where((item) {
+      final keyword = _query.toLowerCase();
+      return item.name.toLowerCase().contains(keyword) ||
+          item.category.toLowerCase().contains(keyword);
+    }).toList();
   }
 
   @override

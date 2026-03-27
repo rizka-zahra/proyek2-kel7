@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/menu_drawer.dart';
 import '../../widgets/navbar_home.dart';
 import '../home/home_page.dart';
+import '../more/pesanan_page.dart';
 import 'faq_page.dart';
 import 'product_info_page.dart';
 
@@ -14,9 +15,24 @@ class AboutPage extends StatefulWidget {
 
 class _AboutPageState extends State<AboutPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _currentIndex = 0;
+
+  // Navbar sekarang 3 item:
+  // 0 = Home
+  // 1 = Belanja
+  // 2 = Artikel
+  final int _currentIndex = 0;
 
   void _handleBottomNav(int index) {
+    if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const PesananPage(),
+        ),
+      );
+      return;
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -42,7 +58,7 @@ class _AboutPageState extends State<AboutPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const HomePage(initialIndex: 2),
+            builder: (_) => const PesananPage(),
           ),
         );
         break;
@@ -51,7 +67,7 @@ class _AboutPageState extends State<AboutPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const HomePage(initialIndex: 3),
+            builder: (_) => const HomePage(initialIndex: 2),
           ),
         );
         break;
@@ -101,6 +117,13 @@ class _AboutPageState extends State<AboutPage> {
               height: 42,
               width: 42,
               fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.storefront_outlined,
+                  size: 38,
+                  color: Color(0xFF5C6F97),
+                );
+              },
             ),
             const SizedBox(width: 10),
             const Expanded(

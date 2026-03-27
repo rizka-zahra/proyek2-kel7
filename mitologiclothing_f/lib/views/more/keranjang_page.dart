@@ -1,52 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/cart_item_model.dart';
-import '../../services/shop_dummy_service.dart';
+import '../../viewmodels/cart_viewmodel.dart';
 import '../../utils/app_format.dart';
 import '../../widgets/brand_header.dart';
 import 'proses_pemesanan_page.dart';
 
-class KeranjangTab extends StatefulWidget {
+class KeranjangTab extends StatelessWidget {
   const KeranjangTab({super.key});
 
   @override
-  State<KeranjangTab> createState() => _KeranjangTabState();
-}
-
-class _KeranjangTabState extends State<KeranjangTab> {
-  late List<CartItemModel> _items;
-  bool _selectAll = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _items = ShopDummyService.getCartItems();
-  }
-
-  int get _total {
-    return _items
-        .where((item) => item.selected)
-        .fold(0, (sum, item) => sum + item.subtotal);
-  }
-
-  List<CartItemModel> get _selectedItems {
-    return _items.where((item) => item.selected).toList();
-  }
-
-  void _toggleSelectAll(bool value) {
-    setState(() {
-      _selectAll = value;
-      for (final item in _items) {
-        item.selected = value;
-      }
-    });
-  }
-
-  void _updateSelectAll() {
-    _selectAll = _items.isNotEmpty && _items.every((item) => item.selected);
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final cartVM = context.watch<CartViewModel>();
+    final items = cartVM.items;
+    final selectedItems = cartVM.selectedItems;
+    final total = cartVM.totalSelectedPrice;
+    final selectAll =
+        items.isNotEmpty && items.every((item) => item.selected);
+
     return SafeArea(
       child: Column(
         children: [
@@ -55,67 +26,66 @@ class _KeranjangTabState extends State<KeranjangTab> {
             child: Column(
               children: [
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                    children: [
-                      const Text(
-                        'Keranjang',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF253047),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFDADCE4)),
-                        ),
-                        child: Row(
+                  child: items.isEmpty
+                      ? _buildEmptyState()
+                      : ListView(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                           children: [
-                            Checkbox(
-                              value: _selectAll,
-                              onChanged: (value) {
-                                _toggleSelectAll(value ?? false);
-                              },
-                            ),
                             const Text(
-                              'Pilih Semua',
+                              'Keranjang',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF253047),
                               ),
                             ),
-                            const Spacer(),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _items.removeWhere((item) => item.selected);
-                                  _updateSelectAll();
-                                });
-                              },
-                              child: const Text(
-                                'Hapus',
-                                style: TextStyle(
-                                  color: Color(0xFFC1C1C8),
-                                  fontWeight: FontWeight.w700,
+                            const SizedBox(height: 18),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: const Color(0xFFDADCE4),
                                 ),
                               ),
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value: selectAll,
+                                    onChanged: (value) {
+                                      cartVM.toggleSelectAll(value ?? false);
+                                    },
+                                  ),
+                                  const Text(
+                                    'Pilih Semua',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  TextButton(
+                                    onPressed: cartVM.removeSelectedItems,
+                                    child: const Text(
+                                      'Hapus',
+                                      style: TextStyle(
+                                        color: Color(0xFFC1C1C8),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(height: 12),
+                            ...items.map((item) => _buildCartCard(context, item)),
+                            const SizedBox(height: 20),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      ..._items.map((item) => _buildCartCard(item)).toList(),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
                 ),
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
@@ -130,7 +100,7 @@ class _KeranjangTabState extends State<KeranjangTab> {
                       Row(
                         children: [
                           Text(
-                            'Total (${_selectedItems.length} produk)',
+                            'Total (${selectedItems.length} produk)',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Color(0xFF6D6D76),
@@ -138,7 +108,7 @@ class _KeranjangTabState extends State<KeranjangTab> {
                           ),
                           const Spacer(),
                           Text(
-                            AppFormat.rupiah(_total),
+                            AppFormat.rupiah(total),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -151,17 +121,23 @@ class _KeranjangTabState extends State<KeranjangTab> {
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: _selectedItems.isEmpty
+                          onPressed: selectedItems.isEmpty
                               ? null
-                              : () {
-                                  Navigator.push(
+                              : () async {
+                                  final success = await Navigator.push<bool>(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => ProsesPemesananPage(
-                                        cartItems: _selectedItems,
+                                        cartItems: List<CartItemModel>.from(
+                                          selectedItems,
+                                        ),
                                       ),
                                     ),
                                   );
+
+                                  if (success == true) {
+                                    cartVM.clearCheckedOutItems();
+                                  }
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF11131A),
@@ -191,7 +167,60 @@ class _KeranjangTabState extends State<KeranjangTab> {
     );
   }
 
-  Widget _buildCartCard(CartItemModel item) {
+  Widget _buildEmptyState() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+      children: [
+        const Text(
+          'Keranjang',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF253047),
+          ),
+        ),
+        const SizedBox(height: 60),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFDADCE4)),
+          ),
+          child: const Column(
+            children: [
+              Icon(
+                Icons.shopping_cart_outlined,
+                size: 64,
+                color: Color(0xFFB0B4C0),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Keranjang masih kosong',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF253047),
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Silakan tambahkan produk terlebih dahulu.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF7B8190),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCartCard(BuildContext context, CartItemModel item) {
+    final cartVM = context.read<CartViewModel>();
     final bool isNetworkImage =
         item.product.imageUrl.startsWith('http://') ||
         item.product.imageUrl.startsWith('https://');
@@ -210,10 +239,7 @@ class _KeranjangTabState extends State<KeranjangTab> {
           Checkbox(
             value: item.selected,
             onChanged: (value) {
-              setState(() {
-                item.selected = value ?? false;
-                _updateSelectAll();
-              });
+              cartVM.toggleItem(item, value ?? false);
             },
           ),
           ClipRRect(
@@ -222,10 +248,7 @@ class _KeranjangTabState extends State<KeranjangTab> {
               width: 80,
               height: 80,
               child: isNetworkImage
-                  ? Image.network(
-                      item.product.imageUrl,
-                      fit: BoxFit.cover,
-                    )
+                  ? Image.network(item.product.imageUrl, fit: BoxFit.cover)
                   : Image.asset(
                       item.product.imageUrl,
                       fit: BoxFit.cover,
@@ -250,6 +273,14 @@ class _KeranjangTabState extends State<KeranjangTab> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  '${item.color} • ${item.size}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6D6D76),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   AppFormat.rupiah(item.product.price),
@@ -271,11 +302,7 @@ class _KeranjangTabState extends State<KeranjangTab> {
                       _qtyButton(
                         icon: Icons.remove,
                         onTap: () {
-                          setState(() {
-                            if (item.quantity > 1) {
-                              item.quantity--;
-                            }
-                          });
+                          cartVM.updateQuantity(item, item.quantity - 1);
                         },
                       ),
                       Expanded(
@@ -292,9 +319,7 @@ class _KeranjangTabState extends State<KeranjangTab> {
                       _qtyButton(
                         icon: Icons.add,
                         onTap: () {
-                          setState(() {
-                            item.quantity++;
-                          });
+                          cartVM.updateQuantity(item, item.quantity + 1);
                         },
                       ),
                     ],
@@ -305,10 +330,7 @@ class _KeranjangTabState extends State<KeranjangTab> {
           ),
           IconButton(
             onPressed: () {
-              setState(() {
-                _items.remove(item);
-                _updateSelectAll();
-              });
+              cartVM.removeItem(item);
             },
             icon: const Icon(
               Icons.delete_outline,

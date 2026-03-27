@@ -24,20 +24,37 @@ class _ArticlePageState extends State<ArticlePage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _categoryLabel(int categoryId) {
+    switch (categoryId) {
+      case 1:
+        return 'Kategori 1';
+      case 2:
+        return 'Kategori 2';
+      case 3:
+        return 'Kategori 3';
+      case 4:
+        return 'Kategori 4';
+      default:
+        return 'Kategori';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final articleVM = context.watch<ArticleViewModel>();
     final articles = articleVM.filteredArticles;
 
     if (articleVM.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (articleVM.errorMessage != null) {
-      return Center(
-        child: Text(articleVM.errorMessage!),
-      );
+      return Center(child: Text(articleVM.errorMessage!));
     }
 
     return SingleChildScrollView(
@@ -89,9 +106,7 @@ class _ArticlePageState extends State<ArticlePage> {
           decoration: BoxDecoration(
             color: const Color(0xFFF4F7FB),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFFD9E1EE),
-            ),
+            border: Border.all(color: const Color(0xFFD9E1EE)),
           ),
           child: const Icon(
             Icons.help_outline,
@@ -191,8 +206,8 @@ class _ArticlePageState extends State<ArticlePage> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withOpacity(0.10),
-                            Colors.black.withOpacity(0.75),
+                            Colors.black.withValues(alpha: 0.10),
+                            Colors.black.withValues(alpha: 0.75),
                           ],
                         ),
                       ),
@@ -205,7 +220,7 @@ class _ArticlePageState extends State<ArticlePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            article.category,
+                            _categoryLabel(article.categoryId),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -245,21 +260,15 @@ class _ArticlePageState extends State<ArticlePage> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.access_time, size: 16, color: Color(0xFF9A9A9A)),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${article.readMinutes} menit',
-                        style: const TextStyle(
-                          color: Color(0xFF9A9A9A),
-                          fontSize: 13,
-                        ),
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: Color(0xFF9A9A9A),
                       ),
-                      const SizedBox(width: 14),
-                      const Icon(Icons.person_outline, size: 16, color: Color(0xFF9A9A9A)),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          article.author,
+                          article.publishedDate ?? '-',
                           style: const TextStyle(
                             color: Color(0xFF9A9A9A),
                             fontSize: 13,
@@ -317,13 +326,16 @@ class _ArticlePageState extends State<ArticlePage> {
                       top: 10,
                       left: 10,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.90),
+                          color: Colors.white.withValues(alpha: 0.90),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          article.tag.toUpperCase(),
+                          _categoryLabel(article.categoryId).toUpperCase(),
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -367,7 +379,7 @@ class _ArticlePageState extends State<ArticlePage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Text(
-                '${article.readMinutes} menit',
+                article.publishedDate ?? '-',
                 style: const TextStyle(
                   fontSize: 12,
                   color: Color(0xFF9A9A9A),
@@ -380,14 +392,24 @@ class _ArticlePageState extends State<ArticlePage> {
     );
   }
 
-  Widget _articleImage(String imagePath) {
-    final isNetwork = imagePath.startsWith('http');
+  Widget _articleImage(String? imagePath) {
+    final safePath = imagePath ?? '';
+    final isNetwork = safePath.startsWith('http');
+
+    if (safePath.isEmpty) {
+      return Container(
+        color: const Color(0xFFECECEC),
+        child: const Center(
+          child: Icon(Icons.image_not_supported_outlined),
+        ),
+      );
+    }
 
     if (isNetwork) {
       return Image.network(
-        imagePath,
+        safePath,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) {
+        errorBuilder: (_, __, _) {
           return Container(
             color: const Color(0xFFECECEC),
             child: const Center(
@@ -399,9 +421,9 @@ class _ArticlePageState extends State<ArticlePage> {
     }
 
     return Image.asset(
-      imagePath,
+      safePath,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) {
+      errorBuilder: (_, __, _) {
         return Container(
           color: const Color(0xFFECECEC),
           child: const Center(

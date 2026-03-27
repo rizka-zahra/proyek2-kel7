@@ -39,9 +39,9 @@ class ArticleViewModel extends ChangeNotifier {
 
     return articles.where((article) {
       return article.title.toLowerCase().contains(keyword) ||
-          article.category.toLowerCase().contains(keyword) ||
+          article.content.toLowerCase().contains(keyword) ||
           article.excerpt.toLowerCase().contains(keyword) ||
-          article.tag.toLowerCase().contains(keyword);
+          article.categoryId.toString().contains(keyword);
     }).toList();
   }
 }

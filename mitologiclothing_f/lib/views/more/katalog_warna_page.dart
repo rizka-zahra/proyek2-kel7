@@ -19,7 +19,7 @@ class KatalogWarnaTab extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: [
-          const BrandHeader(actionIcon: Icons.menu),
+          const BrandHeader(),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),

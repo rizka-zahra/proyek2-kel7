@@ -25,10 +25,6 @@ class Navbar extends StatelessWidget {
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.menu),
-          label: 'Menu',
-        ),
-        BottomNavigationBarItem(
           icon: Icon(Icons.shopping_cart),
           label: 'Belanja',
         ),

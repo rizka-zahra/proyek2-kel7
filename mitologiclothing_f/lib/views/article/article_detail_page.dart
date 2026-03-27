@@ -22,7 +22,7 @@ class ArticleDetailPage extends StatefulWidget {
 
 class _ArticleDetailPageState extends State<ArticleDetailPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final int _currentIndex = 3;
+  final int _currentIndex = 2;
 
   void _handleBottomNav(int index) {
     Navigator.pushReplacement(
@@ -90,10 +90,26 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     }
   }
 
+  String _categoryLabel(int categoryId) {
+    switch (categoryId) {
+      case 1:
+        return 'Kategori 1';
+      case 2:
+        return 'Kategori 2';
+      case 3:
+        return 'Kategori 3';
+      case 4:
+        return 'Kategori 4';
+      default:
+        return 'Kategori';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final article = widget.article;
-    final isNetwork = article.imageUrl.startsWith('http');
+    final imagePath = article.imageUrl ?? '';
+    final isNetwork = imagePath.startsWith('http');
 
     return Scaffold(
       key: _scaffoldKey,
@@ -187,21 +203,15 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
             const SizedBox(height: 14),
             Row(
               children: [
-                const Icon(Icons.access_time, size: 18, color: Color(0xFF9A9A9A)),
-                const SizedBox(width: 6),
-                Text(
-                  '${article.readMinutes} menit',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF8A8A8A),
-                  ),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 18,
+                  color: Color(0xFF9A9A9A),
                 ),
-                const SizedBox(width: 16),
-                const Icon(Icons.person_outline, size: 18, color: Color(0xFF9A9A9A)),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    article.author,
+                    article.publishedDate ?? '-',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF8A8A8A),
@@ -218,7 +228,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                article.tag,
+                _categoryLabel(article.categoryId),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -231,31 +241,38 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
               borderRadius: BorderRadius.circular(18),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: isNetwork
-                    ? Image.network(
-                        article.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
-                          return Container(
-                            color: const Color(0xFFECECEC),
-                            child: const Center(
-                              child: Icon(Icons.image_not_supported_outlined),
-                            ),
-                          );
-                        },
+                child: imagePath.isEmpty
+                    ? Container(
+                        color: const Color(0xFFECECEC),
+                        child: const Center(
+                          child: Icon(Icons.image_not_supported_outlined),
+                        ),
                       )
-                    : Image.asset(
-                        article.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
-                          return Container(
-                            color: const Color(0xFFECECEC),
-                            child: const Center(
-                              child: Icon(Icons.image_not_supported_outlined),
-                            ),
-                          );
-                        },
-                      ),
+                    : isNetwork
+                        ? Image.network(
+                            imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) {
+                              return Container(
+                                color: const Color(0xFFECECEC),
+                                child: const Center(
+                                  child: Icon(Icons.image_not_supported_outlined),
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) {
+                              return Container(
+                                color: const Color(0xFFECECEC),
+                                child: const Center(
+                                  child: Icon(Icons.image_not_supported_outlined),
+                                ),
+                              );
+                            },
+                          ),
               ),
             ),
             const SizedBox(height: 10),

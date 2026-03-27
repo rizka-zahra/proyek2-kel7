@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../widgets/navbar_home.dart';
 import '../../widgets/menu_drawer.dart';
+import '../../widgets/profile_quick_menu.dart';
+import '../../services/access_service.dart';
+import '../../models/user_access_model.dart';
+import '../auth/access_request_page.dart';
 import '../more/about_page.dart';
 import '../more/faq_page.dart';
 import '../more/product_info_page.dart';
@@ -26,7 +30,6 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = const [
     HomeView(),
-    Center(child: Text('Menu Page')),
     SizedBox(),
     ArticlePage(),
   ];
@@ -34,22 +37,67 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;
+    _currentIndex = _safeIndex(widget.initialIndex);
   }
 
-  void _changeTab(int index) {
-    if (index == 2) {
-      Navigator.push(
+  int _safeIndex(int index) {
+    if (index < 0 || index >= _pages.length) {
+      return 0;
+    }
+    return index;
+  }
+
+  Future<void> _openBelanjaWithLoginCheck() async {
+    final isLoggedIn = await AccessService.isLoggedIn();
+
+    if (!isLoggedIn) {
+      final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (_) => const PesananPage(),
+          builder: (_) => const AccessRequestPage(),
+        ),
+      );
+
+      if (result != true || !mounted) return;
+    }
+
+    if (!mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PesananPage(),
+      ),
+    );
+  }
+
+  Future<void> _openProfileInfo() async {
+    final UserAccessModel? user = await AccessService.getUser();
+
+    if (!mounted) return;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Data pengguna belum tersedia'),
         ),
       );
       return;
     }
 
+    await showProfileQuickMenu(context, user);
+  }
+
+  void _changeTab(int index) {
+    if (index == 1) {
+      _openBelanjaWithLoginCheck();
+      return;
+    }
+
+    final safeIndex = _safeIndex(index);
+
     setState(() {
-      _currentIndex = index;
+      _currentIndex = safeIndex;
     });
   }
 
@@ -75,18 +123,13 @@ class _HomePageState extends State<HomePage> {
         Navigator.pop(context);
         Future.delayed(Duration.zero, () {
           if (!mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const PesananPage(),
-            ),
-          );
+          _openBelanjaWithLoginCheck();
         });
         break;
 
       case 'artikel':
         Navigator.pop(context);
-        _changeTab(3);
+        _changeTab(2);
         break;
 
       case 'tentang_kami':
@@ -105,6 +148,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final int safeCurrentIndex = _safeIndex(_currentIndex);
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFF8F7FB),
@@ -149,6 +194,14 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(
+            onPressed: _openProfileInfo,
+            icon: const Icon(
+              Icons.person_outline,
+              color: Color(0xFF8B90A4),
+              size: 28,
+            ),
+          ),
+          IconButton(
             onPressed: () {
               _scaffoldKey.currentState?.openEndDrawer();
             },
@@ -169,9 +222,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      body: _pages[_currentIndex],
+      body: _pages[safeCurrentIndex],
       bottomNavigationBar: Navbar(
-        currentIndex: _currentIndex,
+        currentIndex: safeCurrentIndex,
         onTap: _changeTab,
       ),
     );

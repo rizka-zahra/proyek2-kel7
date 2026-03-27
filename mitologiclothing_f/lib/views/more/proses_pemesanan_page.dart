@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../models/cart_item_model.dart';
+import '../../models/order_history_model.dart';
 import '../../utils/app_format.dart';
+import '../../viewmodels/order_history_viewmodel.dart';
 import 'status_pesanan_page.dart';
 
 class ProsesPemesananPage extends StatefulWidget {
@@ -16,29 +20,20 @@ class ProsesPemesananPage extends StatefulWidget {
 }
 
 class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
-  final TextEditingController _phoneController =
-      TextEditingController(text: '08876567345');
-
-  final TextEditingController _addressController =
-      TextEditingController(text: 'www');
+  final TextEditingController _recipientNameController =
+      TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _villageController = TextEditingController();
+  final TextEditingController _postalCodeController = TextEditingController();
+  final TextEditingController _detailAddressController =
+      TextEditingController();
+  final TextEditingController _addressNoteController = TextEditingController();
 
   final List<Map<String, dynamic>> _shippingOptions = const [
-    {
-      'name': 'JNE Regular',
-      'cost': 15000,
-    },
-    {
-      'name': 'J&T Express',
-      'cost': 18000,
-    },
-    {
-      'name': 'SiCepat Regular',
-      'cost': 17000,
-    },
-    {
-      'name': 'AnterAja Regular',
-      'cost': 16000,
-    },
+    {'name': 'JNE Regular', 'cost': 15000},
+    {'name': 'J&T Express', 'cost': 18000},
+    {'name': 'SiCepat Regular', 'cost': 17000},
+    {'name': 'AnterAja Regular', 'cost': 16000},
   ];
 
   final List<String> _paymentMethods = const [
@@ -52,10 +47,715 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
     'GoPay',
   ];
 
+  static const List<String> _provinceOptions = [
+    'Jawa Barat',
+  ];
+
+  static const Map<String, List<String>> _cityOptions = {
+    'Jawa Barat': [
+      'Kota Bandung',
+      'Kota Bekasi',
+      'Kota Bogor',
+      'Kota Cimahi',
+      'Kota Cirebon',
+      'Kota Depok',
+      'Kota Sukabumi',
+      'Kota Tasikmalaya',
+      'Kota Banjar',
+      'Kabupaten Bandung',
+      'Kabupaten Bandung Barat',
+      'Kabupaten Bekasi',
+      'Kabupaten Bogor',
+      'Kabupaten Ciamis',
+      'Kabupaten Cianjur',
+      'Kabupaten Cirebon',
+      'Kabupaten Garut',
+      'Kabupaten Indramayu',
+      'Kabupaten Karawang',
+      'Kabupaten Kuningan',
+      'Kabupaten Majalengka',
+      'Kabupaten Pangandaran',
+      'Kabupaten Purwakarta',
+      'Kabupaten Subang',
+      'Kabupaten Sukabumi',
+      'Kabupaten Sumedang',
+      'Kabupaten Tasikmalaya',
+    ],
+  };
+
+  static const Map<String, List<String>> _districtOptions = {
+    'Kota Bandung': [
+      'Andir',
+      'Antapani',
+      'Arcamanik',
+      'Astana Anyar',
+      'Babakan Ciparay',
+      'Bandung Kidul',
+      'Bandung Kulon',
+      'Bandung Wetan',
+      'Batununggal',
+      'Bojongloa Kaler',
+      'Bojongloa Kidul',
+      'Buahbatu',
+      'Cibeunying Kaler',
+      'Cibeunying Kidul',
+      'Cibiru',
+      'Cicendo',
+      'Cidadap',
+      'Cinambo',
+      'Coblong',
+      'Gedebage',
+      'Kiaracondong',
+      'Lengkong',
+      'Mandalajati',
+      'Panyileukan',
+      'Rancasari',
+      'Regol',
+      'Sukajadi',
+      'Sukasari',
+      'Sumur Bandung',
+      'Ujungberung',
+    ],
+    'Kota Bekasi': [
+      'Bantar Gebang',
+      'Bekasi Barat',
+      'Bekasi Selatan',
+      'Bekasi Timur',
+      'Bekasi Utara',
+      'Jatiasih',
+      'Jatisampurna',
+      'Medan Satria',
+      'Mustika Jaya',
+      'Pondok Gede',
+      'Pondok Melati',
+      'Rawalumbu',
+    ],
+    'Kota Bogor': [
+      'Bogor Barat',
+      'Bogor Selatan',
+      'Bogor Tengah',
+      'Bogor Timur',
+      'Bogor Utara',
+      'Tanah Sareal',
+    ],
+    'Kota Cimahi': [
+      'Cimahi Selatan',
+      'Cimahi Tengah',
+      'Cimahi Utara',
+    ],
+    'Kota Cirebon': [
+      'Harjamukti',
+      'Kejaksan',
+      'Kesambi',
+      'Lemahwungkuk',
+      'Pekalipan',
+    ],
+    'Kota Depok': [
+      'Beji',
+      'Bojongsari',
+      'Cilodong',
+      'Cimanggis',
+      'Cinere',
+      'Cipayung',
+      'Limo',
+      'Pancoran Mas',
+      'Sawangan',
+      'Sukmajaya',
+      'Tapos',
+    ],
+    'Kota Sukabumi': [
+      'Baros',
+      'Cibeureum',
+      'Citamiang',
+      'Gunungpuyuh',
+      'Lembursitu',
+      'Warudoyong',
+      'Cikole',
+    ],
+    'Kota Tasikmalaya': [
+      'Bungursari',
+      'Cibeureum',
+      'Cihideung',
+      'Cipedes',
+      'Indihiang',
+      'Kawalu',
+      'Mangkubumi',
+      'Purbaratu',
+      'Tamansari',
+      'Tawang',
+    ],
+    'Kota Banjar': [
+      'Banjar',
+      'Langensari',
+      'Pataruman',
+      'Purwaharja',
+    ],
+    'Kabupaten Bandung': [
+      'Arjasari',
+      'Baleendah',
+      'Banjaran',
+      'Bojongsoang',
+      'Cangkuang',
+      'Cicalengka',
+      'Cikancung',
+      'Cilengkrang',
+      'Cileunyi',
+      'Cimaung',
+      'Cimenyan',
+      'Ciparay',
+      'Ciwidey',
+      'Dayeuhkolot',
+      'Ibun',
+      'Katapang',
+      'Kertasari',
+      'Kutawaringin',
+      'Majalaya',
+      'Margaasih',
+      'Margahayu',
+      'Nagreg',
+      'Pacet',
+      'Pameungpeuk',
+      'Pangalengan',
+      'Paseh',
+      'Pasirjambu',
+      'Ranca Bali',
+      'Rancaekek',
+      'Solokanjeruk',
+      'Soreang',
+    ],
+    'Kabupaten Bandung Barat': [
+      'Batujajar',
+      'Cihampelas',
+      'Cikalongwetan',
+      'Cililin',
+      'Cipatat',
+      'Cipeundeuy',
+      'Cipongkor',
+      'Cisarua',
+      'Gununghalu',
+      'Lembang',
+      'Ngamprah',
+      'Padalarang',
+      'Parongpong',
+      'Rongga',
+      'Saguling',
+      'Sindangkerta',
+    ],
+    'Kabupaten Bekasi': [
+      'Babelan',
+      'Bojongmangu',
+      'Cabangbungin',
+      'Cibarusah',
+      'Cibitung',
+      'Cikarang Barat',
+      'Cikarang Pusat',
+      'Cikarang Selatan',
+      'Cikarang Timur',
+      'Cikarang Utara',
+      'Karangbahagia',
+      'Kedungwaringin',
+      'Muara Gembong',
+      'Pebayuran',
+      'Serang Baru',
+      'Setu',
+      'Sukakarya',
+      'Sukatani',
+      'Sukawangi',
+      'Tambelang',
+      'Tambun Selatan',
+      'Tambun Utara',
+      'Tarumajaya',
+    ],
+    'Kabupaten Bogor': [
+      'Babakan Madang',
+      'Bojonggede',
+      'Caringin',
+      'Cariu',
+      'Ciampea',
+      'Ciawi',
+      'Cibinong',
+      'Cibungbulang',
+      'Cigombong',
+      'Cigudeg',
+      'Cijeruk',
+      'Cileungsi',
+      'Ciomas',
+      'Cisarua',
+      'Ciseeng',
+      'Citeureup',
+      'Dramaga',
+      'Gunung Putri',
+      'Gunung Sindur',
+      'Jasinga',
+      'Jonggol',
+      'Kemang',
+      'Klapanunggal',
+      'Leuwiliang',
+      'Leuwisadeng',
+      'Megamendung',
+      'Nanggung',
+      'Pamijahan',
+      'Parung',
+      'Parung Panjang',
+      'Ranca Bungur',
+      'Sukajaya',
+      'Sukamakmur',
+      'Sukaraja',
+      'Tajurhalang',
+      'Tamansari',
+      'Tenjo',
+      'Tenjolaya',
+    ],
+    'Kabupaten Ciamis': [
+      'Banjarsari',
+      'Baregbeg',
+      'Ciamis',
+      'Cidolog',
+      'Cihaurbeuti',
+      'Cijeungjing',
+      'Cikoneng',
+      'Cimaragas',
+      'Cipaku',
+      'Jatinagara',
+      'Kawali',
+      'Lakbok',
+      'Lumbung',
+      'Pamarican',
+      'Panjalu',
+      'Panjalu',
+      'Panumbangan',
+      'Purwadadi',
+      'Rajadesa',
+      'Rancah',
+      'Sadananya',
+      'Sindangkasih',
+      'Sukadana',
+      'Tambaksari',
+    ],
+    'Kabupaten Cianjur': [
+      'Agrabinta',
+      'Bojongpicung',
+      'Campaka',
+      'Campaka Mulya',
+      'Cianjur',
+      'Cibeber',
+      'Cibinong',
+      'Cidaun',
+      'Cijati',
+      'Cikadu',
+      'Cikalongkulon',
+      'Cilaku',
+      'Cipanas',
+      'Ciranjang',
+      'Gekbrong',
+      'Haurwangi',
+      'Kadupandak',
+      'Karangtengah',
+      'Leles',
+      'Mande',
+      'Naringgul',
+      'Pacet',
+      'Pagelaran',
+      'Pasirkuda',
+      'Sindangbarang',
+      'Sukaluyu',
+      'Sukanagara',
+      'Sukaresmi',
+      'Takokak',
+      'Tanggeung',
+      'Warungkondang',
+    ],
+    'Kabupaten Cirebon': [
+      'Arjawinangun',
+      'Astanajapura',
+      'Babakan',
+      'Beber',
+      'Ciledug',
+      'Ciwaringin',
+      'Depok',
+      'Dukupuntang',
+      'Gebang',
+      'Gegesik',
+      'Gempol',
+      'Greged',
+      'Gunungjati',
+      'Jamblang',
+      'Kaliwedi',
+      'Kapetakan',
+      'Karangsembung',
+      'Karangwareng',
+      'Kedawung',
+      'Klangenan',
+      'Lemahabang',
+      'Losari',
+      'Mundu',
+      'Pabuaran',
+      'Pangenan',
+      'Panguragan',
+      'Pasaleman',
+      'Plered',
+      'Plumbon',
+      'Sedong',
+      'Sumber',
+      'Suranenggala',
+      'Susukan',
+      'Talun',
+      'Tengah Tani',
+      'Waled',
+      'Weru',
+    ],
+    'Kabupaten Garut': [
+      'Banyuresmi',
+      'Bayongbong',
+      'Blubur Limbangan',
+      'Bungbulang',
+      'Caringin',
+      'Cibalong',
+      'Cibatu',
+      'Cibiuk',
+      'Cigedug',
+      'Cihurip',
+      'Cikajang',
+      'Cikelet',
+      'Cilawu',
+      'Cisewu',
+      'Cisompet',
+      'Cisurupan',
+      'Garut Kota',
+      'Kadungora',
+      'Karangpawitan',
+      'Kersamanah',
+      'Leles',
+      'Leuwigoong',
+      'Malangbong',
+      'Mekarmukti',
+      'Pakenjeng',
+      'Pameungpeuk',
+      'Pamulihan',
+      'Pangatikan',
+      'Pasirwangi',
+      'Peundeuy',
+      'Samarang',
+      'Sucinaraja',
+      'Sukaresmi',
+      'Sukawening',
+      'Tarogong Kaler',
+      'Tarogong Kidul',
+      'Wanaraja',
+    ],
+    'Kabupaten Indramayu': [
+      'Anjatan',
+      'Arahan',
+      'Balongan',
+      'Bangodua',
+      'Bongas',
+      'Cantigi',
+      'Cikedung',
+      'Gabuswetan',
+      'Gantar',
+      'Haurgeulis',
+      'Indramayu',
+      'Jatibarang',
+      'Juntinyuat',
+      'Karangampel',
+      'Kedokan Bunder',
+      'Kertasemaya',
+      'Krangkeng',
+      'Kroya',
+      'Lelea',
+      'Lohbener',
+      'Losarang',
+      'Pasekan',
+      'Patrol',
+      'Sindang',
+      'Sliyeg',
+      'Sukagumiwang',
+      'Sukra',
+      'Terisi',
+      'Tukdana',
+      'Widasari',
+    ],
+    'Kabupaten Karawang': [
+      'Banyusari',
+      'Batujaya',
+      'Ciampel',
+      'Cibuaya',
+      'Cikampek',
+      'Cilamaya Kulon',
+      'Cilamaya Wetan',
+      'Cilebar',
+      'Jatisari',
+      'Jayakerta',
+      'Karawang Barat',
+      'Karawang Timur',
+      'Klari',
+      'Kotabaru',
+      'Kutawaluya',
+      'Lemahabang',
+      'Majalaya',
+      'Pakisjaya',
+      'Pangkalan',
+      'Pedes',
+      'Purwasari',
+      'Rawamerta',
+      'Rengasdengklok',
+      'Talagasari',
+      'Tegalwaru',
+      'Telukjambe Barat',
+      'Telukjambe Timur',
+      'Tempuran',
+      'Tirtajaya',
+      'Tirtamulya',
+    ],
+    'Kabupaten Kuningan': [
+      'Ciawigebang',
+      'Cibeureum',
+      'Cibingbin',
+      'Cidahu',
+      'Cigandamekar',
+      'Cigugur',
+      'Cilebak',
+      'Cilimus',
+      'Ciniru',
+      'Cipicung',
+      'Ciwaru',
+      'Darma',
+      'Garawangi',
+      'Hantara',
+      'Jalaksana',
+      'Japara',
+      'Kadugede',
+      'Kalimanggis',
+      'Karangkancana',
+      'Kramatmulya',
+      'Kuningan',
+      'Lebakwangi',
+      'Luragung',
+      'Maleber',
+      'Mandirancan',
+      'Nusaherang',
+      'Pancalang',
+      'Pasawahan',
+      'Selajambe',
+      'Sindangagung',
+      'Subang',
+    ],
+    'Kabupaten Majalengka': [
+      'Argapura',
+      'Banjaran',
+      'Bantarujeg',
+      'Cigasong',
+      'Cikijing',
+      'Cingambul',
+      'Dawuan',
+      'Jatitujuh',
+      'Jatiwangi',
+      'Kadipaten',
+      'Kasokandel',
+      'Kertajati',
+      'Lemahsugih',
+      'Leuwimunding',
+      'Ligung',
+      'Maja',
+      'Majalengka',
+      'Malausma',
+      'Palasah',
+      'Panyingkiran',
+      'Rajagaluh',
+      'Sindang',
+      'Sindangwangi',
+      'Sukahaji',
+      'Sumberjaya',
+      'Talaga',
+    ],
+    'Kabupaten Pangandaran': [
+      'Cigugur',
+      'Cijulang',
+      'Cimerak',
+      'Kalipucang',
+      'Langkaplancar',
+      'Mangunjaya',
+      'Padaherang',
+      'Pangandaran',
+      'Parigi',
+      'Sidamulih',
+    ],
+    'Kabupaten Purwakarta': [
+      'Babakancikao',
+      'Bojong',
+      'Bungursari',
+      'Campaka',
+      'Cibatu',
+      'Darangdan',
+      'Jatiluhur',
+      'Kiarapedes',
+      'Maniis',
+      'Pasawahan',
+      'Plered',
+      'Pondoksalam',
+      'Purwakarta',
+      'Sukasari',
+      'Tegalwaru',
+      'Wanayasa',
+    ],
+    'Kabupaten Subang': [
+      'Binong',
+      'Blanakan',
+      'Ciasem',
+      'Ciater',
+      'Cibogo',
+      'Cijambe',
+      'Cikaum',
+      'Cipeundeuy',
+      'Cipunagara',
+      'Cisalak',
+      'Compreng',
+      'Dawuan',
+      'Jalancagak',
+      'Kalijati',
+      'Kasomalang',
+      'Legonkulon',
+      'Pabuaran',
+      'Pagaden',
+      'Pagaden Barat',
+      'Pamanukan',
+      'Patokbeusi',
+      'Purwadadi',
+      'Pusakajaya',
+      'Pusakanagara',
+      'Sagalaherang',
+      'Serangpanjang',
+      'Subang',
+      'Sukasari',
+      'Tambakdahan',
+      'Tanjungsiang',
+    ],
+    'Kabupaten Sukabumi': [
+      'Bantargadung',
+      'Bojonggenteng',
+      'Caringin',
+      'Ciambar',
+      'Cibadak',
+      'Cibitung',
+      'Cicantayan',
+      'Cidahu',
+      'Cidolog',
+      'Ciemas',
+      'Cikakak',
+      'Cikembar',
+      'Cikidang',
+      'Cimanggu',
+      'Ciracap',
+      'Cireunghas',
+      'Cisaat',
+      'Cisolok',
+      'Curugkembar',
+      'Gegerbitung',
+      'Gunungguruh',
+      'Jampangkulon',
+      'Jampangtengah',
+      'Kabandungan',
+      'Kadudampit',
+      'Kalapanunggal',
+      'Kebonpedes',
+      'Lengkong',
+      'Nagrak',
+      'Nyalindung',
+      'Parakansalak',
+      'Parungkuda',
+      'Pelabuhanratu',
+      'Purabaya',
+      'Sagaranten',
+      'Simpenan',
+      'Sukabumi',
+      'Sukalarang',
+      'Surade',
+      'Tegalbuleud',
+      'Waluran',
+      'Warungkiara',
+    ],
+    'Kabupaten Sumedang': [
+      'Buahdua',
+      'Cibugel',
+      'Cimalaka',
+      'Cimanggung',
+      'Cisarua',
+      'Cisitu',
+      'Conggeang',
+      'Darmaraja',
+      'Ganeas',
+      'Jatinangor',
+      'Jatigede',
+      'Jatinunggal',
+      'Pamulihan',
+      'Paseh',
+      'Rancakalong',
+      'Situraja',
+      'Sumedang Selatan',
+      'Sumedang Utara',
+      'Surian',
+      'Tanjungkerta',
+      'Tanjungmedar',
+      'Tanjungsari',
+      'Tomo',
+      'Ujungjaya',
+      'Wado',
+    ],
+    'Kabupaten Tasikmalaya': [
+      'Bantarkalong',
+      'Bojongasih',
+      'Bojonggambir',
+      'Ciawi',
+      'Cibalong',
+      'Cigalontang',
+      'Cikalong',
+      'Cikatomas',
+      'Cineam',
+      'Cipatujah',
+      'Cisayong',
+      'Culamega',
+      'Gunung Tanjung',
+      'Jamanis',
+      'Jatiwaras',
+      'Kadipaten',
+      'Karangjaya',
+      'Leuwisari',
+      'Mangunreja',
+      'Manonjaya',
+      'Pagerageung',
+      'Pancatengah',
+      'Parungponteng',
+      'Puspahiang',
+      'Rajapolah',
+      'Salawu',
+      'Sariwangi',
+      'Singaparna',
+      'Sodonghilir',
+      'Sukaraja',
+      'Sukarame',
+      'Sukaratu',
+      'Sukaresik',
+      'Tanjungjaya',
+      'Taraju',
+    ],
+  };
+
+  String _selectedProvince = 'Jawa Barat';
+  String? _selectedCity;
+  String? _selectedDistrict;
+
   String _shippingMethod = 'JNE Regular';
   int _shippingCost = 15000;
-
   String _paymentMethod = 'Transfer BCA';
+
+  List<String> get _availableCities {
+    return _cityOptions[_selectedProvince] ?? [];
+  }
+
+  List<String> get _availableDistricts {
+    if (_selectedCity == null) return [];
+    return _districtOptions[_selectedCity] ?? [];
+  }
 
   int get _productSubtotal {
     return widget.cartItems.fold(0, (sum, item) => sum + item.subtotal);
@@ -63,11 +763,25 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
 
   int get _totalPayment => _productSubtotal + _shippingCost;
 
+  int get _totalQuantity {
+    return widget.cartItems.fold(0, (sum, item) => sum + item.quantity);
+  }
+
   @override
   void dispose() {
+    _recipientNameController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
+    _villageController.dispose();
+    _postalCodeController.dispose();
+    _detailAddressController.dispose();
+    _addressNoteController.dispose();
     super.dispose();
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _showPaymentMethodSheet() {
@@ -76,9 +790,7 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return SafeArea(
@@ -105,7 +817,7 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
                       itemCount: _paymentMethods.length,
                       itemBuilder: (context, index) {
                         final method = _paymentMethods[index];
-                        final bool isSelected = method == _paymentMethod;
+                        final isSelected = method == _paymentMethod;
 
                         return InkWell(
                           borderRadius: BorderRadius.circular(14),
@@ -178,9 +890,7 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return SafeArea(
@@ -207,9 +917,9 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
                       itemCount: _shippingOptions.length,
                       itemBuilder: (context, index) {
                         final option = _shippingOptions[index];
-                        final String name = option['name'] as String;
-                        final int cost = option['cost'] as int;
-                        final bool isSelected = name == _shippingMethod;
+                        final name = option['name'] as String;
+                        final cost = option['cost'] as int;
+                        final isSelected = name == _shippingMethod;
 
                         return InkWell(
                           borderRadius: BorderRadius.circular(14),
@@ -291,47 +1001,163 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
     );
   }
 
-  void _submitOrder() {
+  Future<void> _submitOrder() async {
+    final recipientName = _recipientNameController.text.trim();
     final phone = _phoneController.text.trim();
-    final address = _addressController.text.trim();
+    final village = _villageController.text.trim();
+    final postalCode = _postalCodeController.text.trim();
+    final detailAddress = _detailAddressController.text.trim();
+    final addressNote = _addressNoteController.text.trim();
+
+    if (recipientName.isEmpty) {
+      _showError('Nama penerima wajib diisi');
+      return;
+    }
 
     if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nomor telepon wajib diisi'),
-        ),
-      );
+      _showError('Nomor telepon wajib diisi');
       return;
     }
 
-    if (address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Alamat wajib diisi'),
-        ),
-      );
+    if (_selectedProvince.isEmpty) {
+      _showError('Provinsi wajib dipilih');
       return;
     }
 
-    Navigator.push(
+    if (_selectedCity == null || _selectedCity!.isEmpty) {
+      _showError('Kota / Kabupaten wajib dipilih');
+      return;
+    }
+
+    if (_selectedDistrict == null || _selectedDistrict!.isEmpty) {
+      _showError('Kecamatan wajib dipilih');
+      return;
+    }
+
+    if (village.isEmpty) {
+      _showError('Kelurahan / Desa wajib diisi');
+      return;
+    }
+
+    if (postalCode.isEmpty) {
+      _showError('Kode pos wajib diisi');
+      return;
+    }
+
+    if (detailAddress.isEmpty) {
+      _showError('Detail alamat wajib diisi');
+      return;
+    }
+
+    final firstItem = widget.cartItems.first;
+    final now = DateTime.now();
+
+    final orderDate =
+        '${now.day.toString().padLeft(2, '0')} '
+        '${_monthName(now.month)} ${now.year}, '
+        '${now.hour.toString().padLeft(2, '0')}:'
+        '${now.minute.toString().padLeft(2, '0')}';
+
+    final fullAddress = [
+      'Penerima: $recipientName',
+      detailAddress,
+      village,
+      _selectedDistrict!,
+      _selectedCity!,
+      _selectedProvince,
+      postalCode,
+      'Indonesia',
+      if (addressNote.isNotEmpty) 'Catatan: $addressNote',
+    ].join(', ');
+
+    final productTitle = widget.cartItems.length == 1
+        ? firstItem.product.name
+        : '${firstItem.product.name} + ${widget.cartItems.length - 1} item lainnya';
+
+    final order = OrderHistoryModel(
+      orderId: 'ORD-${now.millisecondsSinceEpoch}',
+      orderDate: orderDate,
+      productName: productTitle,
+      productImage: firstItem.product.imageUrl,
+      quantity: _totalQuantity,
+      totalPrice: _totalPayment,
+      paymentMethod: _paymentMethod,
+      shippingMethod: _shippingMethod,
+      address: fullAddress,
+      statusOrder: 'Menunggu Konfirmasi',
+      tracking: [
+        OrderTrackingModel(
+          title: 'Pesanan dibuat',
+          time: orderDate,
+          isDone: true,
+        ),
+        const OrderTrackingModel(
+          title: 'Pembayaran dikonfirmasi',
+          time: '-',
+          isDone: false,
+        ),
+        const OrderTrackingModel(
+          title: 'Pesanan diproses',
+          time: '-',
+          isDone: false,
+        ),
+        const OrderTrackingModel(
+          title: 'Pesanan dikirim',
+          time: '-',
+          isDone: false,
+        ),
+        const OrderTrackingModel(
+          title: 'Pesanan diterima',
+          time: '-',
+          isDone: false,
+        ),
+      ],
+    );
+
+    context.read<OrderHistoryViewModel>().addOrder(order);
+
+    final success = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => StatusPesananPage(
           cartItems: widget.cartItems,
           phone: phone,
-          address: address,
+          address: fullAddress,
           shippingMethod: _shippingMethod,
           paymentMethod: _paymentMethod,
           shippingCost: _shippingCost,
         ),
       ),
     );
+
+    if (success == true && mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    return months[month];
   }
 
   @override
   Widget build(BuildContext context) {
     final item = widget.cartItems.first;
-    final bool isNetworkImage =
+    final isNetworkImage =
         item.product.imageUrl.startsWith('http://') ||
         item.product.imageUrl.startsWith('https://');
 
@@ -356,25 +1182,92 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
           _card(
             child: Column(
               children: [
-                _fieldLabel('NO. TELEPHONE'),
-                _textField(_phoneController, hint: '08xxxxxxxxxx'),
+                _fieldLabel('NAMA PENERIMA'),
+                _textField(
+                  _recipientNameController,
+                  hint: 'Masukkan nama penerima',
+                ),
                 const SizedBox(height: 14),
-                _fieldLabel('ALAMAT PENGGUNA'),
+                _fieldLabel('NO. TELEPHONE'),
+                _textField(
+                  _phoneController,
+                  hint: '08xxxxxxxxxx',
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('PROVINSI'),
+                _buildDropdown<String>(
+                  value: _selectedProvince,
+                  hint: 'Pilih provinsi',
+                  items: _provinceOptions,
+                  enabled: true,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedProvince = value;
+                      _selectedCity = null;
+                      _selectedDistrict = null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('KOTA / KABUPATEN'),
+                _buildDropdown<String>(
+                  value: _selectedCity,
+                  hint: 'Pilih kota / kabupaten',
+                  items: _availableCities,
+                  enabled: true,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedCity = value;
+                      _selectedDistrict = null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('KECAMATAN'),
+                _buildDropdown<String>(
+                  value: _selectedDistrict,
+                  hint: 'Pilih kecamatan',
+                  items: _availableDistricts,
+                  enabled: _selectedCity != null,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedDistrict = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('KELURAHAN / DESA'),
+                _textField(
+                  _villageController,
+                  hint: 'Masukkan kelurahan / desa',
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('KODE POS'),
+                _textField(
+                  _postalCodeController,
+                  hint: 'Masukkan kode pos',
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('DETAIL ALAMAT'),
                 TextField(
-                  controller: _addressController,
+                  controller: _detailAddressController,
                   maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Masukkan alamat lengkap',
-                    filled: true,
-                    fillColor: const Color(0xFFF7F7FA),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E4EC)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E4EC)),
-                    ),
+                  decoration: _inputDecoration(
+                    'Contoh: Jl. Melati No. 12, RT 01/RW 02',
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('CATATAN ALAMAT (OPSIONAL)'),
+                TextField(
+                  controller: _addressNoteController,
+                  maxLines: 2,
+                  decoration: _inputDecoration(
+                    'Contoh: Rumah pagar hitam, dekat masjid',
                   ),
                 ),
               ],
@@ -549,6 +1442,46 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
     );
   }
 
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: const Color(0xFFF7F7FA),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE2E4EC)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE2E4EC)),
+      ),
+    );
+  }
+
+  Widget _buildDropdown<T>({
+    required T? value,
+    required String hint,
+    required List<T> items,
+    required bool enabled,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      isExpanded: true,
+      decoration: _inputDecoration(hint),
+      items: items
+          .map(
+            (item) => DropdownMenuItem<T>(
+              value: item,
+              child: Text(item.toString()),
+            ),
+          )
+          .toList(),
+      onChanged: enabled ? onChanged : null,
+      icon: const Icon(Icons.keyboard_arrow_down_rounded),
+    );
+  }
+
   Widget _sectionTitle(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -593,22 +1526,15 @@ class _ProsesPemesananPageState extends State<ProsesPemesananPage> {
     );
   }
 
-  Widget _textField(TextEditingController controller, {required String hint}) {
+  Widget _textField(
+    TextEditingController controller, {
+    required String hint,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextField(
       controller: controller,
-      decoration: InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: const Color(0xFFF7F7FA),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E4EC)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E4EC)),
-        ),
-      ),
+      keyboardType: keyboardType,
+      decoration: _inputDecoration(hint),
     );
   }
 
