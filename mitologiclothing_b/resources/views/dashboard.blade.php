@@ -1,232 +1,187 @@
-<!DOCTYPE html>
-<html lang="en">
+<x-app-layout>
+    <x-slot name="header">
+        Dashboard
+    </x-slot>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(to bottom, #36467A, #000); 
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            color: white;
-        }
 
-        .dashboard-container {
-            width: 100%;
-            max-width: 1200px;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .sidebar {
-            width: 20%;
-            background-color: #1a2b50;
-            min-height: 100vh;
-            color: white;
-            padding-top: 20px;
-            position: sticky;
-            top: 0;
-        }
-
-        .sidebar h2 {
-            font-size: 1.25rem;
-            font-weight: bold;
-            padding-left: 20px;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar ul li a {
-            display: block;
-            padding: 15px;
-            color: white;
-            text-decoration: none;
-            font-size: 1rem;
-            padding-left: 20px;
-            margin-bottom: 10px;
-        }
-
-        .sidebar ul li a:hover {
-            background-color: #2a3a5b;
-            border-radius: 5px;
-        }
-
-        .content {
-            width: 80%;
-            background-color: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-            margin-left: 20px;
-            color: black;
-        }
-
-        .content h1 {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #36467A;
-        }
-
-        .card {
-            background-color: #f0f4f8;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            color: #36467A;
-        }
-
-        .card h3 {
-            font-size: 1.25rem;
-            margin-bottom: 10px;
-        }
-
-        .card p {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .chart-container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 10px;
-            background-color: #36467A;
-            color: white;
-            margin-top: 50px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                padding: 10px;
-            }
-
-            .content {
-                width: 100%;
-                margin-left: 0;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="flex dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <h2>Raja Sawit</h2>
-            <ul>
-                <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li><a href="{{ url('stok') }}">Stok</a></li>
-                <li><a href="{{ url('price-list') }}">Price List</a></li>
-                <li><a href="{{ url('pesanan') }}">Pesanan</a></li>
-                <li><a href="{{ url('tagihan') }}">Tagihan</a></li>
-                <li><a href="{{ url('artikel') }}">Artikel</a></li>
-                <li><a href="{{ url('logout') }}">Logout</a></li>
-            </ul>
-        </div>
-
-        <!-- Content -->
-        <div class="content">
+    <div class="dashboard-page">
+        <div class="dashboard-header">
             <h1>Dashboard</h1>
+            <p>Ringkasan performa konveksi, stok, penjualan, dan tagihan</p>
+        </div>
 
-            {{-- <div class="grid grid-cols-2 gap-4">
-                <!-- Total Stok -->
-                <div class="card">
-                    <h3>Total Stok</h3>
-                    <p>{{ $totalProducts }} Produk</p>
-                </div> --}}
-
-                {{-- <!-- Total Penjualan -->
-                <div class="card">
-                    <h3>Total Penjualan</h3>
-                    <p>Rp {{ number_format($totalSales, 0, ',', '.') }}</p>
+        <div class="stats-grid">
+            <div class="stat-card stat-blue">
+                <div class="stat-top">
+                    <span>Total Stok</span>
+                    <span class="stat-icon-wrap">
+                        <svg viewBox="0 0 24 24" class="stat-icon">
+                            <path d="M12 3 4 7l8 4 8-4-8-4Z"></path>
+                            <path d="M4 7v10l8 4 8-4V7"></path>
+                            <path d="M12 11v10"></path>
+                        </svg>
+                    </span>
                 </div>
-            </div> --}}
+                <div class="stat-value">{{ $totalProducts }} Produk</div>
+            </div>
 
-            {{-- <div class="grid grid-cols-2 gap-4">
-                <!-- Pesanan -->
-                <div class="card">
-                    <h3>Pesanan</h3>
-                    <p>{{ $totalOrders }} Pesanan</p>
-                </div> --}}
-
-                {{-- <!-- Tagihan -->
-                <div class="card">
-                    <h3>Tagihan Tertunda</h3>
-                    <p>{{ $pendingBills }} Tagihan</p>
+            <div class="stat-card stat-green">
+                <div class="stat-top">
+                    <span>Pesanan</span>
+                    <span class="stat-icon-wrap">
+                        <svg viewBox="0 0 24 24" class="stat-icon">
+                            <circle cx="9" cy="20" r="1.5"></circle>
+                            <circle cx="18" cy="20" r="1.5"></circle>
+                            <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H7"></path>
+                        </svg>
+                    </span>
                 </div>
-            </div> --}}
+                <div class="stat-value">{{ $totalOrders }} Pesanan</div>
+            </div>
 
-            {{-- <!-- Distribusi Stok -->
-            <div class="chart-container">
-                <h3>Distribusi Stok</h3>
-                <canvas id="stockDistributionChart"></canvas>
-            </div> --}}
+            <div class="stat-card stat-light">
+                <div class="stat-top">
+                    <span>Total Penjualan</span>
+                    <span class="stat-icon-wrap">
+                        <svg viewBox="0 0 24 24" class="stat-icon">
+                            <path d="M4 16l5-5 4 4 7-7"></path>
+                            <path d="M14 8h6v6"></path>
+                        </svg>
+                    </span>
+                </div>
+                <div class="stat-value">Rp {{ number_format($totalSales, 0, ',', '.') }}</div>
+            </div>
 
-            {{-- <!-- Grafik Penjualan -->
-            <div class="chart-container">
-                <h3>Grafik Total Penjualan</h3>
+            <div class="stat-card stat-cream">
+                <div class="stat-top">
+                    <span>Tagihan Tertunda</span>
+                    <span class="stat-icon-wrap">
+                        <svg viewBox="0 0 24 24" class="stat-icon">
+                            <path d="M8 3h8l3 3v15H5V3h3"></path>
+                            <path d="M8 7h8"></path>
+                            <path d="M8 11h8"></path>
+                            <path d="M8 15h5"></path>
+                        </svg>
+                    </span>
+                </div>
+                <div class="stat-value">{{ $pendingBills }} Tagihan</div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h2>Distribusi Stok</h2>
+
+            <div class="chart-row">
+                <div class="chart-box donut-box">
+                    <canvas id="stockDistributionChart"></canvas>
+                </div>
+
+                <div class="chart-legend-custom">
+                    @php
+                        $chartColors = ['#44528F', '#F2AE3D', '#E7EBF0', '#66A373', '#8B5CF6', '#EF4444', '#14B8A6'];
+                        $totalStokSemua = collect($stockData)->sum();
+                    @endphp
+
+                    @foreach($stockLabels as $index => $label)
+                        @php
+                            $jumlah = $stockData[$index] ?? 0;
+                            $persen = $totalStokSemua > 0 ? round(($jumlah / $totalStokSemua) * 100) : 0;
+                        @endphp
+                        <div class="legend-item">
+                            <div class="legend-left">
+                                <span class="legend-dot" style="background-color: {{ $chartColors[$index % count($chartColors)] }}"></span>
+                                <span>{{ $label }}</span>
+                            </div>
+                            <strong>{{ $persen }}%</strong>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h2>Grafik Total Penjualan</h2>
+            <div class="bar-chart-box">
                 <canvas id="salesChart"></canvas>
-            </div> --}}
-
+            </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-        <p>&copy; 2026 Raja Sawit. All Rights Reserved.</p>
-    </div>
+    <script>
+        const stockLabels = @json($stockLabels);
+        const stockData = @json($stockData);
+        const salesLabels = @json($salesLabels);
+        const salesData = @json($salesData);
 
-    {{-- <script>
-        // Distribusi Stok Chart
-        var ctx1 = document.getElementById('stockDistributionChart').getContext('2d');
-        var stockDistributionChart = new Chart(ctx1, {
-            type: 'pie',
+        const stockColors = ['#44528F', '#F2AE3D', '#E7EBF0', '#66A373', '#8B5CF6', '#EF4444', '#14B8A6'];
+
+        const stockCtx = document.getElementById('stockDistributionChart').getContext('2d');
+        new Chart(stockCtx, {
+            type: 'doughnut',
             data: {
-                labels: ['Kaos', 'Jaket', 'Ganci', 'Jersey'],
+                labels: stockLabels,
                 datasets: [{
-                    data: [{{ $stokKaos }}, {{ $stokJaket }}, {{ $stokGanci }}, {{ $stokJersey }}],
-                    backgroundColor: ['#1D4ED8', '#F59E0B', '#10B981', '#16A34A'],
+                    data: stockData,
+                    backgroundColor: stockColors,
+                    borderWidth: 8,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
                 }]
+            },
+            options: {
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
             }
-        }); --}}
+        });
 
-        {{-- // Grafik Penjualan Chart
-        var ctx2 = document.getElementById('salesChart').getContext('2d');
-        var salesChart = new Chart(ctx2, {
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        new Chart(salesCtx, {
             type: 'bar',
             data: {
-                labels: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+                labels: salesLabels,
                 datasets: [{
                     label: 'Total Penjualan',
-                    data: [{{ $penjualanJan }}, {{ $penjualanFeb }}, {{ $penjualanMar }}, {{ $penjualanApr }}],
-                    backgroundColor: '#1D4ED8',
+                    data: salesData,
+                    backgroundColor: '#44528F',
+                    borderRadius: 6,
+                    barThickness: 30
                 }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#E5E7EB'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('id-ID');
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
             }
-        }); --}}
+        });
     </script>
-</body>
-
-</html>
+</x-app-layout>
